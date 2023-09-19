@@ -7,6 +7,7 @@ import torch.optim as optim
 import torch.nn as nn
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import argparse
 
 
 def calculate_accuracy(y_pred, y, device):
@@ -58,27 +59,24 @@ def evaluate(model, iterator, criterion, device):
     return epoch_loss / len(iterator), epoch_acc / len(iterator)
 
 
-def main():
+def main(args):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f'system device {device}')
     myNet = AbolfazNework().to(device)
-    optimizer = optim.Adam(myNet.parameters(), lr=0.0001)
+
+    optimizer = optim.Adam(myNet.parameters(), lr=args.learning_rate)
     # weight = torch.tensor((0.4914, 0.5086)).to(device)
     criterion = nn.BCELoss()
-    number_of_epochs = 15
-    batch_size = 32
+    number_of_epochs = args.epochs
+    batch_size = args.batch_size
 
     tr = transforms.Compose([transforms.ToTensor(),
                              transforms.Resize((224, 224)),
                              transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
 
-    data_train = AbolfazlDataset(
-        dataroot="/home/mohammad/Documents/Gender_classification_train_version/new_dataset/train",
-        image_transforms=tr)
+    data_train = AbolfazlDataset(dataroot=args.data_root_train, image_transforms=tr)
 
-    data_validation = AbolfazlDataset(
-        dataroot="/home/mohammad/Documents/Gender_classification_train_version/new_dataset/val",
-        image_transforms=tr)
+    data_validation = AbolfazlDataset(dataroot=args.data_root_val, image_transforms=tr)
 
     X = torch.utils.data.DataLoader(data_train, batch_size=batch_size, shuffle=True, num_workers=4)
     Y = torch.utils.data.DataLoader(data_validation, batch_size=batch_size, shuffle=True, num_workers=4)
@@ -97,17 +95,17 @@ def main():
 
         if valid_loss < best_valid_loss:
             torch.save(myNet.state_dict(),
-                       f"/home/mohammad/Documents/Gender_classification_train_version/weight/new_train3/Abolfazl{epoch + 1}.pt")
+                       f"{args.weight}/Abolfazl{epoch + 1}.pt")
             model_scripted = torch.jit.script(myNet)  # for c++ infrence
             model_scripted.save(
-                f"/home/mohammad/Documents/Gender_classification_train_version/weight/new_train3/{epoch + 1}_torch_script.pt")
+                f"{args.weight}/{epoch + 1}_torch_script.pt")
 
         else:
             torch.save(myNet,
-                       f"/home/mohammad/Documents/Gender_classification_train_version/weight/new_train3/{epoch + 1}_last.pth")
+                       f"{args.weight}/{epoch + 1}_last.pth")
             model_scripted = torch.jit.script(myNet)  # for c++ infrence
             model_scripted.save(
-                f"/home/mohammad/Documents/Gender_classification_train_version/weight/new_train3/{epoch + 1}_torch_script_last.pt")
+                f"{args.weight}/{epoch + 1}_torch_script_last.pt")
 
         print(f'Epoch: {epoch + 1:02}')
         print(f"\tTrain Loss: {train_loss:.3f} | Train Acc: {train_acc * 100:.2f}%")
@@ -132,4 +130,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Train the Gender Detector on images and target masks')
+    parser.add_argument("--data_root_train", '-t', default="./dataset/train")
+    parser.add_argument("--data_root_val", '-v', default="./dataset/val")
+    parser.add_argument("--weight", '-w', default="./weight")
+    parser.add_argument('--epochs', '-e', type=int, default=50, help='Number of epochs')
+    parser.add_argument('--batch_size', '-b', metavar='B', type=int, default=32, help='Batch size')
+    parser.add_argument('--learning_rate', '-l', type=float, default=0.0001, help='Learning rate')
+    args = parser.parse_args()
+    main(args)

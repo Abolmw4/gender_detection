@@ -5,12 +5,13 @@ import cv2
 from torchvision.transforms import transforms
 from tqdm import tqdm
 
-
+# load pretrained model here
 model = AbolfazNework().to('cuda')
 model.load_state_dict(
-    torch.load("/home/mohammad/Documents/Gender_classification_train_version/weight/new_train3/Abolfazl15.pt"))
+    torch.load("./Abolfazl_gender_detection.pt"))
 model.eval()
 
+# preprocessing
 tr = transforms.Compose([transforms.ToTensor(),
                          transforms.Resize((224, 224)),
                          transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
@@ -22,7 +23,8 @@ def calculate_accuracy(y_pred, y):
     return acc
 
 
-test_data = AbolfazlDataset("/home/mohammad/Documents/Gender_classification_train_version/newtest2",
+# load test dataset
+test_data = AbolfazlDataset("./testset",
                             image_transforms=tr)
 
 x = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=True, num_workers=4)
@@ -31,7 +33,7 @@ x = torch.utils.data.DataLoader(test_data, batch_size=1, shuffle=True, num_worke
 def evaluate(model, iterator, device='cuda'):
     epoch_acc = 0.0
     model.eval()
-    for (x, y) in tqdm(iterator, desc="Evaluating", leave=True):
+    for (x, y) in tqdm(iterator, desc="Testing", leave=True):
         x = x.to(device)
         y = torch.tensor(y, dtype=torch.float32)
         label = y.to(device)

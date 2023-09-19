@@ -1,7 +1,7 @@
 # Gender detection using face images
 **The goal of our project is to detect gender based on facial images of individuals.
 The trained model has been uploaded to the following link, which contains a dataset of facial images of individuals.**
->* https://drive.google.com/file/d/1yWDPaiNXROSPGfrDI6JO1nFcumUBNkxK/view?usp=sharing
+>* https://drive.google.com/file/d/1e4R7VokUzDzr9GCdZXRAarUfNLc9rIp3/view?usp=sharing
 >* The accuracy of this model on the test dataset was 99.85%.
 
 >Use **python3.7** and **requirement.txt** to implement the project.
